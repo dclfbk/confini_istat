@@ -1,26 +1,15 @@
 import geopandas as gpd
 import pandas as pd
 import numpy as np
-import requests, zipfile, io, os
-import shutil
+import requests, zipfile, io, os, shutil, geobuf, json
 zip_file_url='http://www.istat.it/storage/cartografia/confini_amministrativi/generalizzati/Limiti01012018_g.zip'
 maindir='Limiti01012018_g' 
 r = requests.get(zip_file_url)
 z = zipfile.ZipFile(io.BytesIO(r.content))
 z.extractall()
-dirs = os.listdir(maindir)
-heads = ['rip','reg','prov','com']
-def getDir(dirs,head):
-    rname = None
-    for name in dirs:
-        if name.lower().startswith(head):
-            rname = name
-            break
-    return rname
 # regioni
 dirRegion = getDir(dirs,'reg')
 regions = os.listdir(os.path.join(maindir,dirRegion))
-
 shp_region = None
 for region in regions:
     if region.rfind("shp") > -1:
@@ -30,6 +19,26 @@ regioni = gpd.read_file(os.path.join(maindir,dirRegion,shp_region))
 regioni = regioni[["COD_REG","DEN_REG","geometry"]]
 regioni = regioni.rename(index=str, columns={'COD_REG': 'id', 'DEN_REG': 'name','geometry':'geometry'})
 regioni = regioni.to_crs({'init': 'epsg:4326'})
+
+def togeobuf(infile):
+    out = infile.replace('.json','.pbf')
+    outfile = open(out,'wb')
+    json_data=open(infile).read()
+    data = json.loads(json_data)
+    pbf = geobuf.encode(data)
+    outfile.write(pbf)
+    
+dirs = os.listdir(maindir)
+heads = ['rip','reg','prov','com']
+def getDir(dirs,head):
+    rname = None
+    for name in dirs:
+        if name.lower().startswith(head):
+            rname = name
+            break
+    return rname
+
+
 # province
 dirProvince = getDir(dirs,'prov')
 provinces = os.listdir(os.path.join(maindir,dirProvince))
@@ -44,6 +53,11 @@ province.loc[(province['DEN_PROV'] == "-") & (province['DEN_PCM'] != '-'), ['DEN
 province = province[["COD_REG","COD_PROV","DEN_PROV","SIGLA","geometry"]]
 province = province.rename(index=str, columns={'COD_PROV':'id','COD_REG': 'id_reg', 'DEN_REG': 'name_region','DEN_PROV':'name','SIGLA':'sigla','geometry':'geometry'})
 province = province.to_crs({'init': 'epsg:4326'})
+
+
+# In[167]:
+
+
 # comuni
 dirComuni = getDir(dirs,'com')
 comuni = os.listdir(os.path.join(maindir,dirComuni))
@@ -63,8 +77,10 @@ if os.path.exists('geojson'):
 os.makedirs("geojson")
 filename="regions.json"
 regioni.to_file(os.path.join("geojson",filename), driver="GeoJSON")
+togeobuf(os.path.join("geojson",filename))
 
-# crea province e comuni
+
+# crea province
 for id_reg in regioni.id:
     regprov = os.path.join("geojson",str(id_reg))
     os.makedirs(regprov)
@@ -72,6 +88,7 @@ for id_reg in regioni.id:
     fileprovinces = os.path.join(regprov,"provinces.json")
     print(fileprovinces)
     provincia.to_file(fileprovinces, driver="GeoJSON")
+    togeobuf(fileprovinces)
     for id_prov in provincia.id:
         provcom = os.path.join("geojson",str(id_reg),str(id_prov))
         filemuncipalities = os.path.join(provcom,"muncipalities.json")
@@ -79,4 +96,6 @@ for id_reg in regioni.id:
         os.makedirs(provcom)
         comune = comuni[(comuni.id_prov == id_prov) & (comuni.id_reg == id_reg)]
         comune.to_file(filemuncipalities, driver="GeoJSON")
+        togeobuf(filemuncipalities)
 shutil.rmtree(maindir)
+
