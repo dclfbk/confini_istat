@@ -25,8 +25,6 @@ def togeobuf(infile):
     data = json.loads(json_data)
     pbf = geobuf.encode(data)
     outfile.write(pbf)
-
-
 # regioni
 dirRegion = getDir(dirs,'reg')
 regions = os.listdir(os.path.join(maindir,dirRegion))
@@ -39,14 +37,6 @@ regioni = gpd.read_file(os.path.join(maindir,dirRegion,shp_region))
 regioni = regioni[["COD_REG","DEN_REG","geometry"]]
 regioni = regioni.rename(index=str, columns={'COD_REG': 'id', 'DEN_REG': 'name','geometry':'geometry'})
 regioni = regioni.to_crs({'init': 'epsg:4326'})
-
-
-
-
-    
-
-
-
 
 # province
 dirProvince = getDir(dirs,'prov')
@@ -62,10 +52,6 @@ province.loc[(province['DEN_PROV'] == "-") & (province['DEN_PCM'] != '-'), ['DEN
 province = province[["COD_REG","COD_PROV","DEN_PROV","SIGLA","geometry"]]
 province = province.rename(index=str, columns={'COD_PROV':'id','COD_REG': 'id_reg', 'DEN_REG': 'name_region','DEN_PROV':'name','SIGLA':'sigla','geometry':'geometry'})
 province = province.to_crs({'init': 'epsg:4326'})
-
-
-# In[167]:
-
 
 # comuni
 dirComuni = getDir(dirs,'com')
@@ -87,7 +73,6 @@ os.makedirs("geojson")
 filename="regions.json"
 regioni.to_file(os.path.join("geojson",filename), driver="GeoJSON")
 togeobuf(os.path.join("geojson",filename))
-
 
 # crea province
 for id_reg in regioni.id:
