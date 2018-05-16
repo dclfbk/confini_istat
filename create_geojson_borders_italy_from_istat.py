@@ -7,6 +7,26 @@ maindir='Limiti01012018_g'
 r = requests.get(zip_file_url)
 z = zipfile.ZipFile(io.BytesIO(r.content))
 z.extractall()
+dirs = os.listdir(maindir)
+heads = ['rip','reg','prov','com']
+
+def getDir(dirs,head):
+    rname = None
+    for name in dirs:
+        if name.lower().startswith(head):
+            rname = name
+            break
+    return rname
+
+def togeobuf(infile):
+    out = infile.replace('.json','.pbf')
+    outfile = open(out,'wb')
+    json_data=open(infile).read()
+    data = json.loads(json_data)
+    pbf = geobuf.encode(data)
+    outfile.write(pbf)
+
+
 # regioni
 dirRegion = getDir(dirs,'reg')
 regions = os.listdir(os.path.join(maindir,dirRegion))
@@ -20,23 +40,12 @@ regioni = regioni[["COD_REG","DEN_REG","geometry"]]
 regioni = regioni.rename(index=str, columns={'COD_REG': 'id', 'DEN_REG': 'name','geometry':'geometry'})
 regioni = regioni.to_crs({'init': 'epsg:4326'})
 
-def togeobuf(infile):
-    out = infile.replace('.json','.pbf')
-    outfile = open(out,'wb')
-    json_data=open(infile).read()
-    data = json.loads(json_data)
-    pbf = geobuf.encode(data)
-    outfile.write(pbf)
+
+
+
     
-dirs = os.listdir(maindir)
-heads = ['rip','reg','prov','com']
-def getDir(dirs,head):
-    rname = None
-    for name in dirs:
-        if name.lower().startswith(head):
-            rname = name
-            break
-    return rname
+
+
 
 
 # province
