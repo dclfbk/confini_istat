@@ -1,0 +1,27 @@
+{
+  "name": "confini-istat",
+  "version": "1.0.0",
+  "description": "Confini amministrativi italiani dell'ISTAT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DigitalCommonsLab/confini_istat.git"
+  },
+  "keywords": [
+    "istat",
+    "json",
+    "italia",
+    "comuni",
+    "province",
+    "regioni"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/DigitalCommonsLab/confini_istat/issues"
+  },
+  "homepage": "https://github.com/DigitalCommonsLab/confini_istat#readme"
+}
